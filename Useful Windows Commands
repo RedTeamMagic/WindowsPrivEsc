@@ -3,3 +3,7 @@ In Powershell Terminal:
  
 $Preferences = Get-MpPreference
 $Preferences.ExclusionPath
+
+Sysinternals path
+https://live.sysinternals.com/
+
