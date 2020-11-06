@@ -1,0 +1,5 @@
+Check for Windows Defender Exclusions
+In Powershell Terminal:
+ 
+$Preferences = Get-MpPreference
+$Preferences.ExclusionPath
