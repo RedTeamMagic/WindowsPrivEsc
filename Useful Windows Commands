@@ -7,3 +7,5 @@ $Preferences.ExclusionPath
 Sysinternals path
 https://live.sysinternals.com/
 
+LDAP Search
+ldapsearch -LLL -H ldap://domain.corp.com -x -D 'domain\YOUR_USER' -W -b 'dc=domain,dc=corp,dc=com' '(cn=TARGET_USER)'
